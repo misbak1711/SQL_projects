@@ -100,4 +100,25 @@ select * from review_log;
 
 
 -- 10) Create a trigger to ensure that no negative payment values can be inserted into the olist_order_payments_dataset table.
+Create trigger PreventNegativePayments
+on order_payments
+INSTEAD OF INSERT
+AS
+BEGIN
+    IF EXISTS (SELECT * FROM inserted WHERE payment_value < 0)
+    BEGIN
+        RAISERROR ('Payment value cannot be negative', 16, 1);
+    END
+    ELSE
+    BEGIN
+        INSERT INTO order_payments (order_id, payment_value)
+        SELECT order_id, payment_value
+        FROM inserted;
+    END
+END;
 
+-- Let's check 
+Insert into order_payments (order_id, payment_value)
+values ('15', '-5')
+select * from order_payments 
+where order_id = '15';
